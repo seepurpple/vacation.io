@@ -1,0 +1,1296 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123c5a">
+  <title>41조 상신 도우미</title>
+  <style>
+    :root {
+      --ink: #172738;
+      --muted: #627385;
+      --line: #dce5ec;
+      --paper: #ffffff;
+      --canvas: #f4f7fa;
+      --navy: #123c5a;
+      --teal: #087b7e;
+      --teal-soft: #e4f5f3;
+      --orange: #bb6510;
+      --orange-soft: #fff1df;
+      --purple: #6648aa;
+      --purple-soft: #f1ebff;
+      --danger: #b23b46;
+      --danger-soft: #fff0f1;
+      --shadow: 0 16px 42px rgba(25, 49, 71, .10);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--canvas); }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 88% -10%, #d8f0ef 0, rgba(216, 240, 239, 0) 28rem),
+        radial-gradient(circle at 0 25%, #e6effb 0, rgba(230, 239, 251, 0) 32rem),
+        var(--canvas);
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+      line-height: 1.45;
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .app-shell { width: min(1440px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0 56px; }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      min-height: 188px;
+      padding: 30px 34px;
+      border-radius: 24px;
+      color: #fff;
+      background: linear-gradient(120deg, #123c5a 0%, #185873 66%, #127276 100%);
+      box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "41";
+      position: absolute;
+      right: 26px;
+      bottom: -42px;
+      color: rgba(255,255,255,.08);
+      font-size: 196px;
+      font-weight: 800;
+      letter-spacing: -.12em;
+      line-height: 1;
+    }
+    .hero-row { position: relative; z-index: 1; display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+    .hero-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+    .eyebrow { margin: 0 0 8px; color: #aee6df; font-size: 13px; font-weight: 800; letter-spacing: .09em; }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 42px); letter-spacing: -.055em; line-height: 1.12; }
+    .hero p { max-width: 650px; margin: 13px 0 0; color: #d5e9ec; font-size: 15px; }
+    .hero .subtle-button { border-color: rgba(255,255,255,.36); color: #fff; background: rgba(255,255,255,.12); }
+    .hero .subtle-button:hover { background: rgba(255,255,255,.22); }
+
+    .layout { display: grid; grid-template-columns: minmax(300px, 455px) minmax(0, 1fr); gap: 22px; margin-top: 22px; align-items: stretch; }
+    .card, .calendar-section { border: 1px solid rgba(209, 221, 230, .92); border-radius: var(--radius); background: rgba(255,255,255,.94); box-shadow: 0 8px 24px rgba(26, 48, 67, .05); }
+    .planner { padding: 24px; }
+    .overview { display: flex; flex-direction: column; gap: 18px; min-height: 0; }
+    .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 19px; }
+    h2, h3 { margin: 0; letter-spacing: -.035em; }
+    h2 { font-size: 21px; }
+    h3 { font-size: 16px; }
+    .section-copy, .hint, .empty-copy { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+
+    .vacation-panel { margin-bottom: 22px; padding: 17px; border: 1px solid #c8e0e1; border-radius: 14px; background: #f2fbfa; }
+    .vacation-panel h3 { color: var(--navy); }
+    .field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+    .field-grid.one { grid-template-columns: 1fr; }
+    .field { display: grid; gap: 6px; min-width: 0; }
+    .field.span-2 { grid-column: 1 / -1; }
+    label, .field-label { display: flex; align-items: center; min-height: 19px; color: #405266; font-size: 13px; font-weight: 750; }
+    .label-note { margin-left: auto; color: var(--muted); font-size: 11px; font-weight: 650; }
+    input[type="text"], input[type="date"], input[type="time"], input[type="number"] {
+      width: 100%; min-height: 42px; padding: 9px 11px;
+      border: 1px solid #cbd8e2; border-radius: 10px; outline: none; color: var(--ink); background: #fff;
+      transition: border-color .16s, box-shadow .16s;
+    }
+    input:focus { border-color: #24858b; box-shadow: 0 0 0 3px rgba(36,133,139,.15); }
+    input[readonly], input:disabled { color: var(--muted); background: #f4f6f8; cursor: not-allowed; }
+    .check-row { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; min-height: 42px; padding: 0 11px; border: 1px solid #cbd8e2; border-radius: 10px; background: #fff; }
+    .check { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); font-size: 14px; font-weight: 700; cursor: pointer; }
+    .check input { width: 17px; height: 17px; accent-color: var(--teal); }
+
+    .smart-summary { display: grid; gap: 8px; margin-top: 16px; padding: 14px 15px; border: 1px solid #d5e5e6; border-radius: 12px; background: #f8fcfc; }
+    .smart-summary.empty { border-style: dashed; color: var(--muted); }
+    .smart-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .smart-time { color: var(--navy); font-size: 15px; font-weight: 800; }
+    .smart-arrow { color: var(--teal); font-size: 18px; font-weight: 900; }
+    .smart-note { color: var(--muted); font-size: 12px; }
+    .badge { display: inline-flex; align-items: center; width: fit-content; min-height: 24px; padding: 3px 8px; border-radius: 99px; font-size: 12px; font-weight: 800; }
+    .badge.full { color: #09696d; background: var(--teal-soft); }
+    .badge.half { color: #9a4f06; background: var(--orange-soft); }
+    .badge.overseas { color: #573a98; background: var(--purple-soft); }
+    .badge.article { color: #9a4f06; background: var(--orange-soft); }
+    .badge.home { color: #516274; background: #edf1f5; }
+    .badge.paid { color: #09696d; background: var(--teal-soft); }
+    .badge.unpaid { color: #7a5368; background: #f5edf2; }
+    .badge.warn { color: #a2313c; background: var(--danger-soft); }
+
+    .form-actions { display: flex; gap: 9px; margin-top: 16px; }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 9px 14px; border: 1px solid transparent; border-radius: 10px; font-weight: 800; transition: transform .16s, background .16s, border-color .16s; }
+    .button:hover { transform: translateY(-1px); }
+    .button.primary { color: #fff; background: var(--teal); }
+    .button.primary:hover { background: #066a6d; }
+    .button.secondary { color: var(--navy); border-color: #cbd9e1; background: #fff; }
+    .button.secondary:hover { border-color: #9abcc0; background: #f6fbfb; }
+    .button.danger { color: var(--danger); border-color: #edc4c8; background: #fff; }
+    .button.danger:hover { background: var(--danger-soft); }
+    .button.small { min-height: 32px; padding: 6px 9px; border-radius: 8px; font-size: 12px; }
+    .subtle-button { flex: 0 0 auto; min-height: 36px; padding: 8px 11px; border: 1px solid #c8d9e2; border-radius: 9px; color: var(--navy); background: #fff; font-size: 13px; font-weight: 800; }
+
+    .approval-settings { margin: 0 0 22px; padding-bottom: 19px; border-bottom: 1px solid var(--line); }
+    details > summary { display: flex; align-items: center; justify-content: space-between; list-style: none; color: var(--navy); font-size: 14px; font-weight: 850; cursor: pointer; }
+    details > summary::-webkit-details-marker { display: none; }
+    details > summary::after { content: "+"; color: var(--teal); font-size: 20px; line-height: 1; }
+    details[open] > summary::after { content: "−"; }
+    .approval-body { margin-top: 13px; padding: 14px; border-radius: 12px; background: #f7fafc; }
+    .approval-body .hint { margin-bottom: 12px; }
+
+    .alert { display: none; padding: 12px 14px; border: 1px solid #bce0d8; border-radius: 12px; color: #176a59; background: #effaf6; font-size: 13px; font-weight: 700; }
+    .alert.show { display: block; }
+    .alert.error { border-color: #f0c7cb; color: #a8323d; background: var(--danger-soft); }
+    .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 19px; }
+    .stat { min-width: 0; padding: 12px; border-radius: 12px; background: #f5f8fa; }
+    .stat strong { display: block; color: var(--navy); font-size: 25px; letter-spacing: -.06em; line-height: 1; }
+    .stat span { display: block; overflow: hidden; margin-top: 6px; color: var(--muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+    .stat-calendar { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; width: 100%; border: 1px solid #b7d9d6; color: var(--navy); text-align: left; cursor: pointer; transition: transform .16s, border-color .16s, background .16s; }
+    .stat-calendar:hover { border-color: var(--teal); background: #edf9f8; transform: translateY(-1px); }
+    .stat-calendar strong { font-size: 16px; letter-spacing: -.04em; }
+    .stat-calendar span { margin-top: 4px; }
+
+    .submission { display: flex; flex: 1; flex-direction: column; min-height: 0; padding: 22px; }
+    .submission-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 15px; }
+    .submission-list { display: grid; flex: 1; align-content: start; gap: 14px; min-height: 0; overflow: auto; padding: 2px 4px 4px 0; }
+    .submission-card { padding: 20px 21px; border: 1px solid #dbe6eb; border-left: 5px solid var(--teal); border-radius: 14px; background: #fff; }
+    .submission-card.article { border-left-color: var(--orange); background: #fffdf9; }
+    .submission-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .submission-heading { min-width: 0; flex: 1; }
+    .submission-heading-row { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+    .submission-date { color: var(--navy); font-size: 19px; font-weight: 900; letter-spacing: -.04em; }
+    .submission-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+    .submission-controls { display: flex; flex: 0 0 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; margin-left: auto; }
+    .submission-badges { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 7px; }
+    .submission-card .badge { min-height: 29px; padding: 4px 10px; font-size: 14px; }
+    .submission-actions { display: flex; gap: 6px; }
+    .submission-action { min-height: 29px; padding: 4px 10px; border: 1px solid #cbd9e1; border-radius: 8px; color: #315269; background: #fff; font-size: 13px; font-weight: 850; }
+    .submission-action:hover { border-color: var(--teal); color: #075d61; background: #edf9f8; }
+    .submission-action.delete { border-color: #efc9cd; color: #a13d48; }
+    .submission-action.delete:hover { border-color: #dc7b85; background: var(--danger-soft); }
+    .submission-details { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(210px, .95fr); gap: 15px 24px; margin: 18px 0 0; padding-top: 17px; border-top: 1px solid #e7edf1; }
+    .submission-detail { min-width: 0; padding: 13px 15px; border: 1px solid #dbe7ec; border-radius: 11px; background: #f8fbfc; }
+    .submission-detail.wide { grid-column: 1 / -1; }
+    .submission-detail.primary { border-color: #b8dcda; background: #edf9f8; }
+    .submission-detail dt { color: #718090; font-size: 13px; font-weight: 850; }
+    .submission-detail dd { overflow-wrap: anywhere; margin: 3px 0 0; color: #263b4e; font-size: 18px; font-weight: 800; letter-spacing: -.035em; line-height: 1.35; }
+    .submission-detail.wide dd { font-size: 21px; }
+    .submission-detail.primary dt { color: #32746f; }
+    .submission-card.article .submission-detail dd { color: #80511c; }
+    .empty-state { padding: 27px 16px; border: 1px dashed #cbd9e1; border-radius: 12px; color: var(--muted); text-align: center; font-size: 13px; }
+
+    .calendar-section { margin-top: 22px; overflow: hidden; }
+    .calendar-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 24px 16px; border-bottom: 1px solid var(--line); }
+    .calendar-title { display: flex; align-items: center; gap: 11px; }
+    .calendar-title h2 { font-size: 23px; }
+    .calendar-title p { margin: 0; color: var(--muted); font-size: 12px; }
+    .month-controls { display: flex; gap: 7px; }
+    .icon-button { width: 36px; height: 36px; border: 1px solid #ccdbe3; border-radius: 9px; color: var(--navy); background: #fff; font-size: 20px; line-height: 1; }
+    .icon-button:hover { border-color: #8cb7bb; background: #f3faf9; }
+    .weekday-row, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+    .weekday-row { border-bottom: 1px solid var(--line); background: #f8fafb; }
+    .weekday-row span { padding: 10px 8px; color: var(--muted); font-size: 12px; font-weight: 800; text-align: center; }
+    .weekday-row span:first-child { color: #c05861; }
+    .weekday-row span:last-child { color: #4b72a3; }
+    .calendar-grid { min-height: 646px; }
+    .day { position: relative; min-width: 0; min-height: 125px; padding: 8px; border-right: 1px solid #e4ebf0; border-bottom: 1px solid #e4ebf0; background: rgba(255,255,255,.75); }
+    .day:nth-child(7n) { border-right: 0; }
+    .day.blank { background: #f8fafb; }
+    .day.weekend:not(.has-training) { background: #fbfcfd; }
+    .day.vacation { background: linear-gradient(145deg, rgba(239,250,248,.9), rgba(255,255,255,.8)); }
+    .day.today .date-number { color: #fff; background: var(--navy); }
+    .day.selected { box-shadow: inset 0 0 0 2px #4bb0a7; }
+    .date-number { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; color: #536476; background: transparent; font-size: 13px; font-weight: 850; }
+    .date-number:hover { color: #fff; background: var(--teal); }
+    .weekend.sunday .date-number { color: #c0505b; }
+    .weekend.saturday .date-number { color: #4b73a5; }
+    .day.today .date-number:hover { background: var(--navy); }
+    .day-plans { display: grid; gap: 5px; margin-top: 6px; }
+    .plan { min-width: 0; padding: 6px 7px; border-left: 3px solid var(--teal); border-radius: 5px; background: #ecf8f7; }
+    .plan.article { border-left-color: var(--orange); background: var(--orange-soft); }
+    .plan.overseas { border-left-color: var(--purple); background: var(--purple-soft); }
+    .plan.warning { border-left-color: var(--danger); background: var(--danger-soft); }
+    .plan-label { display: block; overflow: hidden; color: #1d5960; font-size: 10px; font-weight: 900; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+    .plan.article .plan-label { color: #9a5007; }
+    .plan.overseas .plan-label { color: #593d99; }
+    .plan.warning .plan-label { color: #a4333e; }
+    .plan-time { display: block; overflow: hidden; margin-top: 2px; color: #536477; font-size: 10px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
+    .plan-title { display: block; overflow: hidden; margin-top: 2px; color: #33485c; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+    .calendar-legend { display: flex; flex-wrap: wrap; gap: 15px; padding: 13px 22px; color: var(--muted); font-size: 12px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--teal); }
+    .legend-dot.article { background: var(--orange); }
+    .legend-dot.overseas { background: var(--purple); }
+
+    .calendar-modal[hidden] { display: none; }
+    .calendar-modal { position: fixed; z-index: 30; inset: 0; display: grid; place-items: center; padding: 22px; }
+    .calendar-backdrop { position: absolute; inset: 0; background: rgba(6, 18, 30, .64); backdrop-filter: blur(4px); }
+    .calendar-modal-panel { position: relative; z-index: 1; width: min(1440px, 100%); max-height: calc(100vh - 44px); margin: 0; overflow: auto; box-shadow: 0 24px 80px rgba(0, 0, 0, .28); }
+    .calendar-modal-panel .calendar-grid { min-height: 0; }
+    .modal-close { margin-left: 9px; font-size: 25px; }
+    body.modal-open { overflow: hidden; }
+
+    .manage { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+    .footer-note { margin: 16px 4px 0; color: var(--muted); font-size: 12px; }
+    .footer-note strong { color: #526578; }
+
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --ink: #e6eef5;
+      --muted: #aab9c8;
+      --line: #354858;
+      --paper: #18242f;
+      --canvas: #0d1620;
+      --navy: #b9e2f4;
+      --teal: #52bdb5;
+      --teal-soft: #173d3d;
+      --orange: #e4a154;
+      --orange-soft: #432f1a;
+      --purple: #c5aff7;
+      --purple-soft: #382b55;
+      --danger: #ff8b98;
+      --danger-soft: #47232b;
+      --shadow: 0 16px 42px rgba(0, 0, 0, .30);
+    }
+    html[data-theme="dark"] body { background: radial-gradient(circle at 88% -10%, #173b3e 0, rgba(23,59,62,0) 28rem), radial-gradient(circle at 0 25%, #1a2d43 0, rgba(26,45,67,0) 32rem), var(--canvas); }
+    html[data-theme="dark"] .card, html[data-theme="dark"] .calendar-section { border-color: #344958; background: rgba(24, 36, 47, .97); }
+    html[data-theme="dark"] .vacation-panel { border-color: #386566; background: #123437; }
+    html[data-theme="dark"] label, html[data-theme="dark"] .field-label { color: #c9d9e7; }
+    html[data-theme="dark"] input[type="text"], html[data-theme="dark"] input[type="date"], html[data-theme="dark"] input[type="time"], html[data-theme="dark"] input[type="number"], html[data-theme="dark"] .check-row { border-color: #415769; color: var(--ink); background: #14212b; }
+    html[data-theme="dark"] input[readonly], html[data-theme="dark"] input:disabled { color: var(--muted); background: #202e39; }
+    html[data-theme="dark"] .check { color: var(--ink); }
+    html[data-theme="dark"] .smart-summary { border-color: #35545a; background: #142a2d; }
+    html[data-theme="dark"] .approval-body, html[data-theme="dark"] .stat { background: #1d2b36; }
+    html[data-theme="dark"] .button.secondary, html[data-theme="dark"] .button.danger, html[data-theme="dark"] .icon-button { border-color: #435a6c; background: #182732; }
+    html[data-theme="dark"] .button.secondary { color: var(--navy); }
+    html[data-theme="dark"] .button.danger { color: #ff9ea8; }
+    html[data-theme="dark"] .stat-calendar:hover { border-color: var(--teal); background: #1a3438; }
+    html[data-theme="dark"] .submission-card { border-color: #39505f; border-left-color: var(--teal); background: #182833; }
+    html[data-theme="dark"] .submission-card.article { border-left-color: var(--orange); background: #2b241c; }
+    html[data-theme="dark"] .submission-details { border-color: #354957; }
+    html[data-theme="dark"] .submission-detail { border-color: #405665; background: #1d303c; }
+    html[data-theme="dark"] .submission-detail.primary { border-color: #3b6b69; background: #17383a; }
+    html[data-theme="dark"] .submission-detail dd { color: #e1edf5; }
+    html[data-theme="dark"] .submission-card.article .submission-detail dd { color: #f1c58e; }
+    html[data-theme="dark"] .submission-action { border-color: #476174; color: #c4d9e7; background: #1b2d38; }
+    html[data-theme="dark"] .submission-action:hover { border-color: var(--teal); color: #b8efea; background: #194144; }
+    html[data-theme="dark"] .submission-action.delete { border-color: #8c4f5a; color: #ffb5bd; }
+    html[data-theme="dark"] .weekday-row, html[data-theme="dark"] .day.blank { background: #1c2a35; }
+    html[data-theme="dark"] .day { border-color: #344956; background: #192833; }
+    html[data-theme="dark"] .day.weekend:not(.has-training) { background: #17242e; }
+    html[data-theme="dark"] .day.vacation { background: linear-gradient(145deg, #19383a, #192833); }
+    html[data-theme="dark"] .date-number, html[data-theme="dark"] .plan-time { color: #bdcad6; }
+    html[data-theme="dark"] .plan { background: #193d3d; }
+    html[data-theme="dark"] .plan-label { color: #9de1da; }
+    html[data-theme="dark"] .calendar-modal-panel { box-shadow: 0 24px 80px rgba(0, 0, 0, .55); }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .planner { position: static; }
+      .overview { min-height: auto; }
+      .submission { flex: initial; }
+      .submission-list { flex: initial; max-height: 660px; }
+      .calendar-grid { min-height: 550px; }
+    }
+    @media (max-width: 690px) {
+      .app-shell { width: min(100% - 24px, 720px); padding-top: 12px; }
+      .hero { min-height: 0; padding: 24px 20px; border-radius: 18px; }
+      .hero-row { display: block; }
+      .hero-actions { justify-content: flex-start; margin-top: 18px; }
+      .planner, .submission { padding: 18px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .field-grid { grid-template-columns: 1fr; }
+      .field.span-2 { grid-column: auto; }
+      .calendar-header { align-items: flex-start; padding: 18px 15px 14px; }
+      .calendar-title h2 { font-size: 19px; }
+      .weekday-row span { padding: 8px 1px; font-size: 10px; }
+      .day { min-height: 99px; padding: 5px; }
+      .calendar-grid { min-height: 0; }
+      .plan { padding: 4px 5px; }
+      .plan-title { display: none; }
+      .plan-label, .plan-time { font-size: 9px; }
+      .submission-card { padding: 13px; }
+      .submission-top { display: block; }
+      .submission-controls { justify-content: flex-start; margin-top: 8px; margin-left: 0; }
+      .submission-badges { justify-content: flex-start; }
+      .submission-details { grid-template-columns: 1fr; }
+      .submission-detail.wide { grid-column: auto; }
+      .calendar-legend { padding: 11px 14px; gap: 10px; }
+      .calendar-modal { padding: 10px; }
+      .calendar-modal-panel { max-height: calc(100vh - 20px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="hero-row">
+        <div>
+          <p class="eyebrow">VACATION TRAINING PLANNER</p>
+          <h1>41조 상신 도우미</h1>
+          <p>방학 연수 일정 입력. 전일·반일 자동 판정, 이동시간 반영, 남는 시간 41조 계획까지 달력에 정리.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="subtle-button" type="button" id="themeToggle" aria-pressed="false">다크 모드</button>
+          <button class="subtle-button" type="button" id="loadExample">예시 일정 보기</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="card planner" aria-labelledby="inputTitle">
+        <div class="section-heading">
+          <div>
+            <h2 id="inputTitle">일정 입력</h2>
+            <p class="section-copy">연수 1일씩 등록. 저장 뒤 달력 자동 반영.</p>
+          </div>
+        </div>
+
+        <section class="approval-settings" aria-labelledby="approvalTitle">
+          <details>
+            <summary id="approvalTitle">결재선 설정 <span class="hint">학교별 정보 입력</span></summary>
+            <div class="approval-body">
+              <p class="hint">결재선 기준 미제공. 학교·교육청 기준 직접 입력. 달력과 상신 목록에 즉시 표시.</p>
+              <div class="field-grid one">
+                <div class="field"><label for="routeArticle">제41조 연수</label><input id="routeArticle" type="text" placeholder="예: 본인 → 부장 → 교감 → 교장"></div>
+                <div class="field"><label for="routeHalf">반일 연수</label><input id="routeHalf" type="text" placeholder="예: 본인 → 부장 → 교감 → 교장"></div>
+                <div class="field"><label for="routeFull">전일 연수</label><input id="routeFull" type="text" placeholder="예: 본인 → 부장 → 교감 → 교장"></div>
+                <div class="field"><label for="routeOverseas">해외 연수</label><input id="routeOverseas" type="text" placeholder="예: 본인 → 교감 → 교장 → 교육지원청"></div>
+              </div>
+            </div>
+          </details>
+        </section>
+
+        <section class="vacation-panel" aria-labelledby="vacationTitle">
+          <h3 id="vacationTitle">방학 기간</h3>
+          <p class="hint">평일 기본 시간 08:30–16:30에 자동 41조 계획 생성.</p>
+          <div class="field-grid">
+            <div class="field">
+              <label for="vacationStart">시작일</label>
+              <input id="vacationStart" type="date">
+            </div>
+            <div class="field">
+              <label for="vacationEnd">종료일</label>
+              <input id="vacationEnd" type="date">
+            </div>
+          </div>
+        </section>
+
+        <form id="trainingForm" novalidate>
+          <div class="field-grid">
+            <div class="field span-2">
+              <label for="title">연수 제목</label>
+              <input id="title" type="text" maxlength="120" placeholder="예: 2026 인공지능 활용 선도교사">
+            </div>
+            <div class="field">
+              <label for="trainingDate">연수 날짜</label>
+              <input id="trainingDate" type="date">
+            </div>
+            <div class="field">
+              <span class="field-label">해외 연수 여부</span>
+              <div class="check-row">
+                <label class="check"><input id="overseas" type="checkbox"> 해외 연수</label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="startTime">시작 시간</label>
+              <input id="startTime" type="time" value="09:00">
+            </div>
+            <div class="field">
+              <label for="endTime">종료 시간</label>
+              <input id="endTime" type="time" value="18:00">
+            </div>
+            <div class="field">
+              <label for="travelMinutes">이동 시간 (편도·분)</label>
+              <input id="travelMinutes" type="number" min="0" max="600" step="1" value="0" inputmode="numeric" title="자택 원격 연수에는 이동시간이 반영되지 않습니다.">
+            </div>
+            <div class="field">
+              <label for="location">장소</label>
+              <input id="location" type="text" maxlength="120" placeholder="예: 올림픽파크텔">
+            </div>
+            <div class="field span-2">
+              <span class="field-label">연수 방식</span>
+              <div class="check-row">
+                <label class="check"><input id="atHome" type="checkbox"> 자택 원격 연수</label>
+              </div>
+            </div>
+            <div class="field span-2">
+              <label for="reference">관련 공문</label>
+              <input id="reference" type="text" maxlength="160" placeholder="예: 동부교육지원청 중등지원과-9999(2026.7.2)">
+            </div>
+            <div class="field span-2">
+              <label for="allowance">여비지급 여부</label>
+              <input id="allowance" type="text" value="지급" readonly aria-describedby="allowanceHelp">
+              <span id="allowanceHelp" class="hint">자택 체크 해제: 지급 · 자택 체크: 부지급</span>
+            </div>
+          </div>
+
+          <div class="smart-summary empty" id="rulePreview" aria-live="polite">
+            시간 입력 뒤 전일·반일 판정과 나이스 상신 가능 시간이 표시됨.
+          </div>
+
+          <div class="form-actions">
+            <button class="button primary" type="submit" id="submitTraining">일정 달력에 추가</button>
+            <button class="button secondary" type="reset" id="formReset">입력 비우기</button>
+          </div>
+        </form>
+
+        <div class="manage">
+          <button class="button secondary small" type="button" id="goToday">이번 달</button>
+          <button class="button danger small" type="button" id="clearAll">전체 초기화</button>
+        </div>
+      </section>
+
+      <section class="overview" aria-label="상신 계획 요약">
+        <div id="alert" class="alert" role="status"></div>
+        <section class="card stats" aria-label="일정 요약">
+          <div class="stat"><strong id="statTraining">0</strong><span>등록 연수</span></div>
+          <div class="stat"><strong id="statFull">0</strong><span>전일 연수</span></div>
+          <div class="stat"><strong id="statHalf">0</strong><span>반일 연수</span></div>
+          <button class="stat stat-calendar" type="button" id="openCalendarModal" aria-haspopup="dialog"><strong>전체 일정</strong><span>확인하기 →</span></button>
+        </section>
+
+        <section class="card submission" aria-labelledby="submissionTitle">
+          <div class="submission-header">
+            <div>
+              <h2 id="submissionTitle">상신 목록</h2>
+              <p class="section-copy">상신 양식 요약 · 보정 시간만 표시 · 연속 41조 자동 묶음.</p>
+            </div>
+          </div>
+          <div class="submission-list" id="submissionList"></div>
+        </section>
+      </section>
+    </main>
+
+    <div class="calendar-modal" id="calendarModal" hidden>
+      <div class="calendar-backdrop" data-close-calendar aria-hidden="true"></div>
+      <section class="calendar-section calendar-modal-panel" role="dialog" aria-modal="true" aria-labelledby="calendarTitle" tabindex="-1">
+        <div class="calendar-header">
+          <div class="calendar-title">
+            <div>
+              <h2 id="calendarTitle">달력</h2>
+              <p id="calendarSubtitle">날짜 선택 시 입력란 날짜 변경.</p>
+            </div>
+          </div>
+          <div class="month-controls" aria-label="달 변경">
+            <button class="icon-button" type="button" id="previousMonth" aria-label="이전 달">‹</button>
+            <button class="icon-button" type="button" id="nextMonth" aria-label="다음 달">›</button>
+            <button class="icon-button modal-close" type="button" id="closeCalendarModal" aria-label="달력 닫기">×</button>
+          </div>
+        </div>
+        <div class="weekday-row" aria-hidden="true"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="calendar-legend">
+          <span class="legend-item"><i class="legend-dot"></i>연수</span>
+          <span class="legend-item"><i class="legend-dot article"></i>제41조 연수</span>
+          <span class="legend-item"><i class="legend-dot overseas"></i>해외 연수</span>
+          <span>평일 방학일: 연수 외 08:30–16:30 자동 41조 생성</span>
+        </div>
+      </section>
+    </div>
+
+    <p class="footer-note"><strong>저장 위치:</strong> 현재 브라우저. 나이스 직접 상신·공문 판단 전 최종 결재선과 학교 지침 확인 필요.</p>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const STORAGE_KEY = 'article-41-planner-v1';
+      const THEME_KEY = 'article-41-theme-v1';
+      const DAY_START = 8 * 60 + 30;
+      const DAY_END = 16 * 60 + 30;
+      const COMMUTE_START_LIMIT = 10 * 60;
+      const COMMUTE_END_LIMIT = 15 * 60 + 50;
+      const TIME_SNAP_TOLERANCE = 10;
+      const DEFAULT_APPROVALS = {
+        article: '',
+        half: '',
+        full: '',
+        overseas: ''
+      };
+
+      const $ = (id) => document.getElementById(id);
+      const dom = {
+        form: $('trainingForm'),
+        title: $('title'),
+        trainingDate: $('trainingDate'),
+        startTime: $('startTime'),
+        endTime: $('endTime'),
+        travelMinutes: $('travelMinutes'),
+        location: $('location'),
+        reference: $('reference'),
+        atHome: $('atHome'),
+        overseas: $('overseas'),
+        allowance: $('allowance'),
+        preview: $('rulePreview'),
+        vacationStart: $('vacationStart'),
+        vacationEnd: $('vacationEnd'),
+        routeArticle: $('routeArticle'),
+        routeHalf: $('routeHalf'),
+        routeFull: $('routeFull'),
+        routeOverseas: $('routeOverseas'),
+        alert: $('alert'),
+        statTraining: $('statTraining'),
+        statFull: $('statFull'),
+        statHalf: $('statHalf'),
+        submissionList: $('submissionList'),
+        calendarGrid: $('calendarGrid'),
+        calendarTitle: $('calendarTitle'),
+        calendarSubtitle: $('calendarSubtitle'),
+        calendarModal: $('calendarModal'),
+        openCalendarModal: $('openCalendarModal'),
+        closeCalendarModal: $('closeCalendarModal'),
+        themeToggle: $('themeToggle'),
+        loadExample: $('loadExample'),
+        clearAll: $('clearAll'),
+        goToday: $('goToday'),
+        previousMonth: $('previousMonth'),
+        nextMonth: $('nextMonth'),
+        submitTraining: $('submitTraining'),
+        formReset: $('formReset')
+      };
+
+      const today = localDateString(new Date());
+      let selectedDate = '';
+      let lastFocusedElement = null;
+      let editingId = null;
+      let state = loadState();
+
+      function localDateString(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+      }
+
+      function validMonth(value) {
+        return /^\d{4}-\d{2}$/.test(value || '');
+      }
+
+      function loadState() {
+        const fallback = {
+          vacationStart: '',
+          vacationEnd: '',
+          approvals: { ...DEFAULT_APPROVALS },
+          trainings: [],
+          viewMonth: today.slice(0, 7)
+        };
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          if (!saved || typeof saved !== 'object') return fallback;
+          return {
+            vacationStart: typeof saved.vacationStart === 'string' ? saved.vacationStart : '',
+            vacationEnd: typeof saved.vacationEnd === 'string' ? saved.vacationEnd : '',
+            approvals: { ...DEFAULT_APPROVALS, ...(saved.approvals || {}) },
+            trainings: Array.isArray(saved.trainings) ? saved.trainings.filter(isTrainingRecord) : [],
+            viewMonth: validMonth(saved.viewMonth) ? saved.viewMonth : today.slice(0, 7)
+          };
+        } catch (_) {
+          return fallback;
+        }
+      }
+
+      function isTrainingRecord(record) {
+        return record && typeof record === 'object' && typeof record.id === 'string' &&
+          typeof record.date === 'string' && typeof record.start === 'string' && typeof record.end === 'string';
+      }
+
+      function saveState() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      function loadTheme() {
+        try {
+          return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light';
+        } catch (_) {
+          return 'light';
+        }
+      }
+
+      function applyTheme(theme) {
+        const dark = theme === 'dark';
+        if (dark) document.documentElement.dataset.theme = 'dark';
+        else delete document.documentElement.dataset.theme;
+        dom.themeToggle.textContent = dark ? '라이트 모드' : '다크 모드';
+        dom.themeToggle.setAttribute('aria-pressed', String(dark));
+      }
+
+      function toggleTheme() {
+        const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        try { localStorage.setItem(THEME_KEY, nextTheme); } catch (_) { /* browser storage unavailable */ }
+        applyTheme(nextTheme);
+      }
+
+      function escapeHTML(value) {
+        return String(value ?? '').replace(/[&<>'"]/g, (char) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        })[char]);
+      }
+
+      function timeToMinutes(value) {
+        if (!/^\d{2}:\d{2}$/.test(value || '')) return Number.NaN;
+        const [hours, minutes] = value.split(':').map(Number);
+        return hours * 60 + minutes;
+      }
+
+      function minutesToTime(value) {
+        const hours = Math.floor(value / 60);
+        const minutes = value % 60;
+        return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+      }
+
+      function getTravelMinutes(training) {
+        if (training.atHome) return 0;
+        const minutes = Number(training.travelMinutes);
+        if (!Number.isFinite(minutes) || minutes < 0) return 0;
+        return Math.min(Math.floor(minutes), 600);
+      }
+
+      function getCalculation(training) {
+        const actualStart = timeToMinutes(training.start);
+        const actualEnd = timeToMinutes(training.end);
+        if (!Number.isFinite(actualStart) || !Number.isFinite(actualEnd) || actualEnd <= actualStart) {
+          return { valid: false };
+        }
+        const travelMinutes = getTravelMinutes(training);
+        const fullFlexEligible = !training.atHome && actualStart <= COMMUTE_START_LIMIT && actualEnd >= COMMUTE_END_LIMIT;
+        let approvedStart = actualStart;
+        let approvedEnd = actualEnd;
+        let startSnapped = false;
+        let endSnapped = false;
+
+        if (training.atHome) {
+          approvedStart = actualStart;
+          approvedEnd = actualEnd;
+        } else if (fullFlexEligible) {
+          approvedStart = Math.min(actualStart, DAY_START);
+          approvedEnd = Math.max(actualEnd, DAY_END);
+        } else {
+          approvedStart = Math.max(0, actualStart - travelMinutes);
+          approvedEnd = Math.min(24 * 60, actualEnd + travelMinutes);
+          if (Math.abs(approvedStart - DAY_START) <= TIME_SNAP_TOLERANCE) {
+            approvedStart = DAY_START;
+            startSnapped = true;
+          }
+          if (Math.abs(approvedEnd - DAY_END) <= TIME_SNAP_TOLERANCE) {
+            approvedEnd = DAY_END;
+            endSnapped = true;
+          }
+        }
+
+        const full = training.atHome
+          ? actualStart <= DAY_START && actualEnd >= DAY_END
+          : fullFlexEligible;
+        return {
+          valid: true, actualStart, actualEnd, approvedStart, approvedEnd, fullFlexEligible,
+          startSnapped, endSnapped, travelMinutes, kind: full ? 'full' : 'half'
+        };
+      }
+
+      function getRouteKey(training, calculation = getCalculation(training)) {
+        if (training.overseas) return 'overseas';
+        return calculation.kind === 'full' ? 'full' : 'half';
+      }
+
+      function getRouteLabel(key) {
+        return ({ article: '제41조 연수', half: '반일 연수', full: '전일 연수', overseas: '해외 연수' })[key];
+      }
+
+      function getRouteValue(key) {
+        return state.approvals[key]?.trim() || '결재선 설정 필요';
+      }
+
+      function formatDate(value, short = false) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value || '')) return '';
+        const [year, month, day] = value.split('-').map(Number);
+        const weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+        const weekday = weekdays[new Date(year, month - 1, day).getDay()];
+        return short ? `${month}.${day} (${weekday})` : `${year}.${month}.${day} (${weekday})`;
+      }
+
+      function addDays(value, amount) {
+        const [year, month, day] = value.split('-').map(Number);
+        const date = new Date(year, month - 1, day + amount);
+        return localDateString(date);
+      }
+
+      function isWeekday(value) {
+        const [year, month, day] = value.split('-').map(Number);
+        const weekday = new Date(year, month - 1, day).getDay();
+        return weekday !== 0 && weekday !== 6;
+      }
+
+      function hasValidVacation() {
+        return /^\d{4}-\d{2}-\d{2}$/.test(state.vacationStart) &&
+          /^\d{4}-\d{2}-\d{2}$/.test(state.vacationEnd) &&
+          state.vacationStart <= state.vacationEnd;
+      }
+
+      function isInVacation(value) {
+        return hasValidVacation() && value >= state.vacationStart && value <= state.vacationEnd;
+      }
+
+      function isAutoArticleDay(value) {
+        return isInVacation(value) && isWeekday(value);
+      }
+
+      function getTrainingLabel(training, calculation) {
+        if (training.overseas) return `해외 연수 · ${calculation.kind === 'full' ? '전일' : '반일'}`;
+        return calculation.kind === 'full' ? '전일 연수' : '반일 연수';
+      }
+
+      function getTrainingTime(training, calculation, showArrow = true) {
+        const actual = `${training.start}–${training.end}`;
+        if (training.atHome || !showArrow) return actual;
+        return `${actual} → ${minutesToTime(calculation.approvedStart)}–${minutesToTime(calculation.approvedEnd)}`;
+      }
+
+      function getSubmissionTime(training, calculation) {
+        if (training.atHome) return `${training.start}–${training.end}`;
+        return `${minutesToTime(calculation.approvedStart)}–${minutesToTime(calculation.approvedEnd)}`;
+      }
+
+      function renderPreview() {
+        const draft = {
+          start: dom.startTime.value,
+          end: dom.endTime.value,
+          travelMinutes: dom.travelMinutes.value,
+          atHome: dom.atHome.checked,
+          overseas: dom.overseas.checked
+        };
+        dom.travelMinutes.disabled = draft.atHome;
+        dom.allowance.value = draft.atHome ? '부지급' : '지급';
+        const calculation = getCalculation(draft);
+        if (!calculation.valid) {
+          dom.preview.className = 'smart-summary empty';
+          dom.preview.textContent = '시간 입력 뒤 전일·반일 판정과 나이스 상신 가능 시간이 표시됨.';
+          return;
+        }
+        const type = calculation.kind === 'full' ? '전일 연수' : '반일 연수';
+        const overseas = draft.overseas ? '<span class="badge overseas">해외 연수</span>' : '';
+        if (draft.atHome) {
+          dom.preview.className = 'smart-summary';
+          dom.preview.innerHTML = `
+            <div class="smart-top"><span class="badge ${calculation.kind}">${type}</span>${overseas}<span class="badge home">자택</span></div>
+            <div class="smart-time">실제 연수 시간 ${escapeHTML(draft.start)}–${escapeHTML(draft.end)}</div>
+            <div class="smart-note">자택 원격 연수: 이동 시간 자동 보정 없음. 여비 부지급.</div>`;
+          return;
+        }
+        dom.preview.className = 'smart-summary';
+        dom.preview.innerHTML = `
+          <div class="smart-top"><span class="badge ${calculation.kind}">${type}</span>${overseas}<span class="badge home">여비 지급</span></div>
+          <div class="smart-time">${escapeHTML(draft.start)}–${escapeHTML(draft.end)} <span class="smart-arrow">→</span> ${minutesToTime(calculation.approvedStart)}–${minutesToTime(calculation.approvedEnd)}</div>
+          <div class="smart-note">편도 ${calculation.travelMinutes}분 반영. 전일 기준은 기존 유연 기준 우선. 이동 반영 뒤 08:30·16:30과 10분 이내면 해당 시간으로 자동 맞춤.</div>`;
+      }
+
+      function getDayPlans(date) {
+        const trainings = state.trainings
+          .filter((training) => training.date === date)
+          .sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+        const plans = [];
+        const coverage = [];
+        for (const training of trainings) {
+          const calculation = getCalculation(training);
+          if (!calculation.valid) continue;
+          const routeKey = getRouteKey(training, calculation);
+          plans.push({
+            type: 'training', training, calculation, routeKey,
+            label: getTrainingLabel(training, calculation),
+            time: getTrainingTime(training, calculation),
+            route: getRouteValue(routeKey)
+          });
+          if (isAutoArticleDay(date)) {
+            const from = Math.max(DAY_START, calculation.approvedStart);
+            const to = Math.min(DAY_END, calculation.approvedEnd);
+            if (to > from) coverage.push([from, to]);
+          }
+        }
+
+        if (isAutoArticleDay(date)) {
+          const merged = coverage
+            .sort((a, b) => a[0] - b[0])
+            .reduce((result, interval) => {
+              const previous = result[result.length - 1];
+              if (previous && interval[0] <= previous[1]) previous[1] = Math.max(previous[1], interval[1]);
+              else result.push([...interval]);
+              return result;
+            }, []);
+          let cursor = DAY_START;
+          for (const [from, to] of merged) {
+            if (from > cursor) plans.push(articlePlan(cursor, from));
+            cursor = Math.max(cursor, to);
+          }
+          if (cursor < DAY_END) plans.push(articlePlan(cursor, DAY_END));
+        }
+        return plans.sort((a, b) => planStart(a) - planStart(b) || (a.type === 'article' ? 1 : -1));
+      }
+
+      function articlePlan(start, end) {
+        return {
+          type: 'article', routeKey: 'article', label: '제41조 연수',
+          title: '방학 기본 시간', time: `${minutesToTime(start)}–${minutesToTime(end)}`,
+          route: getRouteValue('article'), start, end
+        };
+      }
+
+      function planStart(plan) {
+        return plan.type === 'article' ? plan.start : plan.calculation.approvedStart;
+      }
+
+      function planHtml(plan, compact = false) {
+        if (plan.type === 'article') {
+          return `<div class="plan article" title="제41조 연수 ${escapeHTML(plan.time)} · ${escapeHTML(plan.route)}">
+            <span class="plan-label">제41조</span><span class="plan-time">${escapeHTML(plan.time)}</span>${compact ? '' : `<span class="plan-title">${escapeHTML(plan.title)}</span>`}</div>`;
+        }
+        const className = plan.training.overseas ? 'overseas' : '';
+        const homeMark = plan.training.atHome ? ' · 자택' : '';
+        return `<div class="plan ${className}" title="${escapeHTML(plan.label)} ${escapeHTML(plan.time)} · ${escapeHTML(plan.route)}">
+          <span class="plan-label">${escapeHTML(plan.label)}${homeMark}</span><span class="plan-time">${escapeHTML(plan.time)}</span>${compact ? '' : `<span class="plan-title">${escapeHTML(plan.training.title)}</span>`}</div>`;
+      }
+
+      function monthParts() {
+        const [year, month] = state.viewMonth.split('-').map(Number);
+        return { year, month };
+      }
+
+      function shiftMonth(amount) {
+        const { year, month } = monthParts();
+        const date = new Date(year, month - 1 + amount, 1);
+        state.viewMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        saveState();
+        renderCalendar();
+      }
+
+      function openCalendar() {
+        lastFocusedElement = document.activeElement;
+        dom.calendarModal.hidden = false;
+        document.body.classList.add('modal-open');
+        dom.closeCalendarModal.focus();
+      }
+
+      function closeCalendar() {
+        if (dom.calendarModal.hidden) return;
+        dom.calendarModal.hidden = true;
+        document.body.classList.remove('modal-open');
+        lastFocusedElement?.focus?.();
+      }
+
+      function handleCalendarKeys(event) {
+        if (dom.calendarModal.hidden) return;
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeCalendar();
+        } else if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          shiftMonth(-1);
+        } else if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          shiftMonth(1);
+        }
+      }
+
+      function renderCalendar() {
+        const { year, month } = monthParts();
+        const firstDay = new Date(year, month - 1, 1).getDay();
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const monthName = `${year}년 ${month}월`;
+        dom.calendarTitle.textContent = monthName;
+        dom.calendarSubtitle.textContent = hasValidVacation()
+          ? `방학 ${formatDate(state.vacationStart, true)}–${formatDate(state.vacationEnd, true)} · 날짜 선택 시 입력란 날짜 변경.`
+          : '방학 기간 입력 시 평일 41조 계획 자동 생성.';
+        let html = '';
+        for (let i = 0; i < firstDay; i += 1) html += '<div class="day blank" aria-hidden="true"></div>';
+        for (let day = 1; day <= daysInMonth; day += 1) {
+          const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+          const weekday = new Date(year, month - 1, day).getDay();
+          const plans = getDayPlans(date);
+          const classes = ['day'];
+          if (weekday === 0 || weekday === 6) classes.push('weekend', weekday === 0 ? 'sunday' : 'saturday');
+          if (isInVacation(date)) classes.push('vacation');
+          if (plans.some((plan) => plan.type === 'training')) classes.push('has-training');
+          if (date === today) classes.push('today');
+          if (date === selectedDate) classes.push('selected');
+          html += `<div class="${classes.join(' ')}" data-calendar-date="${date}">
+            <button class="date-number" type="button" data-pick-date="${date}" aria-label="${formatDate(date)} 선택">${day}</button>
+            <div class="day-plans">${plans.map((plan) => planHtml(plan, true)).join('')}</div>
+          </div>`;
+        }
+        const remainder = (firstDay + daysInMonth) % 7;
+        if (remainder) for (let i = remainder; i < 7; i += 1) html += '<div class="day blank" aria-hidden="true"></div>';
+        dom.calendarGrid.innerHTML = html;
+      }
+
+      function submissionDates() {
+        const dates = new Set(state.trainings.map((training) => training.date));
+        if (hasValidVacation()) {
+          for (let date = state.vacationStart; date <= state.vacationEnd; date = addDays(date, 1)) {
+            if (isAutoArticleDay(date)) dates.add(date);
+          }
+        }
+        return [...dates].sort();
+      }
+
+      function nextAutoArticleDay(date) {
+        if (!hasValidVacation()) return '';
+        for (let candidate = addDays(date, 1); candidate <= state.vacationEnd; candidate = addDays(candidate, 1)) {
+          if (isAutoArticleDay(candidate)) return candidate;
+        }
+        return '';
+      }
+
+      function mergeArticleParts(parts) {
+        const groups = [];
+        for (const part of parts.sort((a, b) => a.date.localeCompare(b.date) || a.start - b.start)) {
+          const previous = groups[groups.length - 1];
+          const joinsSameDay = previous && previous.endDate === part.date && previous.end === part.start;
+          const joinsNextWorkday = previous && previous.end === DAY_END && part.start === DAY_START &&
+            nextAutoArticleDay(previous.endDate) === part.date;
+          if (joinsSameDay || joinsNextWorkday) {
+            previous.endDate = part.date;
+            previous.end = part.end;
+          } else {
+            groups.push({ type: 'article', startDate: part.date, endDate: part.date, start: part.start, end: part.end });
+          }
+        }
+        return groups;
+      }
+
+      function formatArticleRange(entry) {
+        const start = `${formatDate(entry.startDate, true)} ${minutesToTime(entry.start)}`;
+        if (entry.startDate === entry.endDate) return `${start}–${minutesToTime(entry.end)}`;
+        return `${start} ~ ${formatDate(entry.endDate, true)} ${minutesToTime(entry.end)}`;
+      }
+
+      function getSubmissionEntries() {
+        const trainingEntries = [];
+        const articleParts = [];
+        for (const date of submissionDates()) {
+          for (const plan of getDayPlans(date)) {
+            if (plan.type === 'article') {
+              articleParts.push({ date, start: plan.start, end: plan.end });
+            } else {
+              trainingEntries.push({
+                type: 'training', date, start: plan.calculation.approvedStart,
+                training: plan.training, calculation: plan.calculation, routeKey: plan.routeKey
+              });
+            }
+          }
+        }
+        const articleEntries = mergeArticleParts(articleParts);
+        return [...trainingEntries, ...articleEntries].sort((a, b) => {
+          const dateA = a.type === 'article' ? a.startDate : a.date;
+          const dateB = b.type === 'article' ? b.startDate : b.date;
+          return dateA.localeCompare(dateB) || a.start - b.start || (a.type === 'article' ? 1 : -1);
+        });
+      }
+
+      function trainingSubmissionHtml(entry) {
+        const { training, calculation, routeKey } = entry;
+        const kind = calculation.kind === 'full' ? '전일' : '반일';
+        const allowance = training.atHome ? '여비 부지급' : '여비 지급';
+        const location = training.atHome ? '자택' : (training.location || '장소 미입력');
+        const reference = training.reference || '관련 공문 미입력';
+        const overseas = training.overseas ? '<span class="badge overseas">해외 연수</span>' : '';
+        const safeId = escapeHTML(training.id);
+        const safeTitle = escapeHTML(training.title || getTrainingLabel(training, calculation));
+        return `<article class="submission-card">
+          <header class="submission-top">
+            <div class="submission-heading"><div class="submission-heading-row"><div class="submission-date">${escapeHTML(formatDate(entry.date, true))}</div><div class="submission-badges"><span class="badge ${calculation.kind}">${kind}</span>${overseas}<span class="badge ${training.atHome ? 'unpaid' : 'paid'}">${allowance}</span></div></div><p class="submission-subtitle">연수 상신</p></div>
+            <div class="submission-controls">
+              <div class="submission-actions"><button class="submission-action" type="button" data-edit-training="${safeId}" aria-label="${safeTitle} 수정">수정</button><button class="submission-action delete" type="button" data-delete-training="${safeId}" aria-label="${safeTitle} 삭제">삭제</button></div>
+            </div>
+          </header>
+          <dl class="submission-details">
+            <div class="submission-detail wide primary"><dt>연수 제목</dt><dd>${safeTitle}</dd></div>
+            <div class="submission-detail"><dt>연수 시간</dt><dd>${escapeHTML(getSubmissionTime(training, calculation))}</dd></div>
+            <div class="submission-detail"><dt>장소</dt><dd>${escapeHTML(location)}</dd></div>
+            <div class="submission-detail"><dt>관련 공문</dt><dd>${escapeHTML(reference)}</dd></div>
+            <div class="submission-detail"><dt>결재선</dt><dd>${escapeHTML(getRouteValue(routeKey))}</dd></div>
+          </dl>
+        </article>`;
+      }
+
+      function articleSubmissionHtml(entry) {
+        const range = formatArticleRange(entry);
+        return `<article class="submission-card article">
+          <header class="submission-top">
+            <div class="submission-heading"><div class="submission-heading-row"><div class="submission-date">${escapeHTML(range)}</div><div class="submission-badges"><span class="badge article">제41조 연수</span></div></div><p class="submission-subtitle">방학 중 연수 외 시간 자동 묶음</p></div>
+          </header>
+          <dl class="submission-details">
+            <div class="submission-detail wide"><dt>제41조 연수 기간</dt><dd>${escapeHTML(range)}</dd></div>
+            <div class="submission-detail wide"><dt>결재선</dt><dd>${escapeHTML(getRouteValue('article'))}</dd></div>
+          </dl>
+        </article>`;
+      }
+
+      function renderSubmissions() {
+        const entries = getSubmissionEntries();
+        if (!entries.length) {
+          dom.submissionList.innerHTML = '<div class="empty-state">방학 기간 또는 연수 일정을 입력하면 상신 목록 생성.</div>';
+          return 0;
+        }
+        dom.submissionList.innerHTML = entries.map((entry) => entry.type === 'article'
+          ? articleSubmissionHtml(entry)
+          : trainingSubmissionHtml(entry)).join('');
+        return entries.filter((entry) => entry.type === 'article').length;
+      }
+
+      function renderStats() {
+        const calculated = state.trainings.map(getCalculation).filter((value) => value.valid);
+        dom.statTraining.textContent = state.trainings.length;
+        dom.statFull.textContent = calculated.filter((value) => value.kind === 'full').length;
+        dom.statHalf.textContent = calculated.filter((value) => value.kind === 'half').length;
+      }
+
+      function syncFields() {
+        dom.vacationStart.value = state.vacationStart;
+        dom.vacationEnd.value = state.vacationEnd;
+        dom.routeArticle.value = state.approvals.article;
+        dom.routeHalf.value = state.approvals.half;
+        dom.routeFull.value = state.approvals.full;
+        dom.routeOverseas.value = state.approvals.overseas;
+      }
+
+      function renderAll() {
+        renderPreview();
+        renderCalendar();
+        renderSubmissions();
+        renderStats();
+      }
+
+      function showAlert(message, isError = false) {
+        dom.alert.textContent = message;
+        dom.alert.className = `alert show${isError ? ' error' : ''}`;
+        window.clearTimeout(showAlert.timer);
+        showAlert.timer = window.setTimeout(() => { dom.alert.className = 'alert'; }, 4200);
+      }
+
+      function uniqueId() {
+        return window.crypto?.randomUUID?.() || `training-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+
+      function setFormMode() {
+        const editing = Boolean(editingId);
+        dom.submitTraining.textContent = editing ? '수정 저장' : '일정 달력에 추가';
+        dom.formReset.textContent = editing ? '수정 취소' : '입력 비우기';
+      }
+
+      function resetForm() {
+        editingId = null;
+        dom.title.value = '';
+        dom.trainingDate.value = '';
+        dom.startTime.value = '09:00';
+        dom.endTime.value = '18:00';
+        dom.travelMinutes.value = '0';
+        dom.location.value = '';
+        dom.reference.value = '';
+        dom.atHome.checked = false;
+        dom.overseas.checked = false;
+        if (selectedDate) dom.trainingDate.value = selectedDate;
+        setFormMode();
+        renderPreview();
+      }
+
+      function addTraining(event) {
+        event.preventDefault();
+        const isEditing = Boolean(editingId);
+        const training = {
+          id: isEditing ? editingId : uniqueId(),
+          title: dom.title.value.trim(),
+          date: dom.trainingDate.value,
+          start: dom.startTime.value,
+          end: dom.endTime.value,
+          travelMinutes: dom.atHome.checked ? 0 : Number(dom.travelMinutes.value || 0),
+          location: dom.location.value.trim(),
+          reference: dom.reference.value.trim(),
+          atHome: dom.atHome.checked,
+          overseas: dom.overseas.checked
+        };
+        if (!training.title || !training.date) {
+          showAlert('연수 제목과 날짜 입력 필요.', true);
+          return;
+        }
+        if (!training.atHome && (!Number.isInteger(training.travelMinutes) || training.travelMinutes < 0 || training.travelMinutes > 600)) {
+          showAlert('이동 시간은 0~600분 정수로 입력.', true);
+          return;
+        }
+        const calculation = getCalculation(training);
+        if (!calculation.valid) {
+          showAlert('종료 시간은 시작 시간 뒤여야 함.', true);
+          return;
+        }
+        if (isEditing) {
+          const index = state.trainings.findIndex((item) => item.id === editingId);
+          if (index === -1) {
+            showAlert('수정할 연수를 찾지 못함. 다시 시도.', true);
+            resetForm();
+            return;
+          }
+          state.trainings[index] = training;
+        } else {
+          state.trainings.push(training);
+        }
+        state.trainings.sort((a, b) => a.date.localeCompare(b.date) || a.start.localeCompare(b.start));
+        state.viewMonth = training.date.slice(0, 7);
+        selectedDate = training.date;
+        saveState();
+        resetForm();
+        renderAll();
+        const kind = calculation.kind === 'full' ? '전일' : '반일';
+        showAlert(`${training.date} ${kind}${training.overseas ? ' 해외' : ''} 연수 ${isEditing ? '수정' : '등록'} 완료.`);
+      }
+
+      function startEdit(id) {
+        const training = state.trainings.find((item) => item.id === id);
+        if (!training) {
+          showAlert('수정할 연수를 찾지 못함.', true);
+          return;
+        }
+        editingId = id;
+        selectedDate = training.date;
+        dom.title.value = training.title || '';
+        dom.trainingDate.value = training.date;
+        dom.startTime.value = training.start;
+        dom.endTime.value = training.end;
+        dom.travelMinutes.value = String(training.travelMinutes ?? 0);
+        dom.location.value = training.location || '';
+        dom.reference.value = training.reference || '';
+        dom.atHome.checked = Boolean(training.atHome);
+        dom.overseas.checked = Boolean(training.overseas);
+        setFormMode();
+        renderPreview();
+        renderCalendar();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        dom.title.focus();
+      }
+
+      function deleteTraining(id) {
+        const training = state.trainings.find((item) => item.id === id);
+        if (!training) {
+          showAlert('삭제할 연수를 찾지 못함.', true);
+          return;
+        }
+        if (!window.confirm(`'${training.title || '이 연수'}' 삭제. 계속?`)) return;
+        state.trainings = state.trainings.filter((item) => item.id !== id);
+        if (editingId === id) resetForm();
+        saveState();
+        renderAll();
+        showAlert('연수 삭제 완료. 41조 계획도 자동 갱신.');
+      }
+
+      function changeVacation() {
+        state.vacationStart = dom.vacationStart.value;
+        state.vacationEnd = dom.vacationEnd.value;
+        if (state.vacationStart && state.vacationEnd && state.vacationStart > state.vacationEnd) {
+          showAlert('방학 종료일은 시작일 뒤여야 함.', true);
+        } else if (state.vacationStart) {
+          state.viewMonth = state.vacationStart.slice(0, 7);
+        }
+        saveState();
+        renderAll();
+      }
+
+      function changeApprovals() {
+        state.approvals = {
+          article: dom.routeArticle.value,
+          half: dom.routeHalf.value,
+          full: dom.routeFull.value,
+          overseas: dom.routeOverseas.value
+        };
+        saveState();
+        renderAll();
+      }
+
+      function loadExample() {
+        if (state.trainings.length && !window.confirm('현재 입력한 일정이 예시 일정으로 바뀜. 계속?')) return;
+        state = {
+          vacationStart: '2026-07-20',
+          vacationEnd: '2026-08-14',
+          approvals: {
+            article: '본인 → 부장 → 교감 → 교장',
+            half: '본인 → 부장 → 교감 → 교장',
+            full: '본인 → 부장 → 교감 → 교장',
+            overseas: '본인 → 교감 → 교장 → 교육지원청'
+          },
+          trainings: [
+            { id: uniqueId(), title: '2026 인공지능 활용 선도교사', date: '2026-07-21', start: '09:00', end: '18:00', travelMinutes: 30, location: '올림픽파크텔', reference: '동부교육지원청 중등지원과-9999(2026.7.2)', atHome: false, overseas: false },
+            { id: uniqueId(), title: '원격 수업 역량 강화 연수', date: '2026-07-23', start: '09:00', end: '11:50', travelMinutes: 0, location: '', reference: '', atHome: true, overseas: false },
+            { id: uniqueId(), title: '국제 교육 포럼', date: '2026-07-28', start: '09:30', end: '16:00', travelMinutes: 45, location: '해외 연수장', reference: '', atHome: false, overseas: true }
+          ],
+          viewMonth: '2026-07'
+        };
+        selectedDate = '2026-07-21';
+        resetForm();
+        syncFields();
+        saveState();
+        renderAll();
+        showAlert('예시 일정 로드. 필요하면 전체 초기화 뒤 실제 일정 입력.');
+      }
+
+      function clearAll() {
+        if (!window.confirm('방학 기간, 결재선, 등록 연수 전체 삭제. 계속?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        state = {
+          vacationStart: '', vacationEnd: '', approvals: { ...DEFAULT_APPROVALS }, trainings: [], viewMonth: today.slice(0, 7)
+        };
+        selectedDate = '';
+        syncFields();
+        resetForm();
+        renderAll();
+        showAlert('전체 초기화 완료.');
+      }
+
+      function pickDate(date) {
+        if (!dom.calendarModal.hidden) closeCalendar();
+        selectedDate = date;
+        dom.trainingDate.value = date;
+        renderCalendar();
+        dom.title.focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function bindEvents() {
+        dom.form.addEventListener('submit', addTraining);
+        dom.form.addEventListener('reset', () => window.setTimeout(resetForm, 0));
+        [dom.startTime, dom.endTime, dom.travelMinutes, dom.atHome, dom.overseas].forEach((input) => input.addEventListener('input', renderPreview));
+        [dom.vacationStart, dom.vacationEnd].forEach((input) => input.addEventListener('change', changeVacation));
+        [dom.routeArticle, dom.routeHalf, dom.routeFull, dom.routeOverseas].forEach((input) => input.addEventListener('input', changeApprovals));
+        dom.previousMonth.addEventListener('click', () => shiftMonth(-1));
+        dom.nextMonth.addEventListener('click', () => shiftMonth(1));
+        dom.openCalendarModal.addEventListener('click', openCalendar);
+        dom.closeCalendarModal.addEventListener('click', closeCalendar);
+        dom.calendarModal.addEventListener('click', (event) => {
+          if (event.target.closest('[data-close-calendar]')) closeCalendar();
+        });
+        document.addEventListener('keydown', handleCalendarKeys);
+        dom.themeToggle.addEventListener('click', toggleTheme);
+        dom.goToday.addEventListener('click', () => {
+          state.viewMonth = today.slice(0, 7);
+          saveState();
+          renderCalendar();
+          openCalendar();
+        });
+        dom.loadExample.addEventListener('click', loadExample);
+        dom.clearAll.addEventListener('click', clearAll);
+        dom.calendarGrid.addEventListener('click', (event) => {
+          const button = event.target.closest('[data-pick-date]');
+          if (button) pickDate(button.dataset.pickDate);
+        });
+        dom.submissionList.addEventListener('click', (event) => {
+          const editButton = event.target.closest('[data-edit-training]');
+          if (editButton) {
+            startEdit(editButton.dataset.editTraining);
+            return;
+          }
+          const deleteButton = event.target.closest('[data-delete-training]');
+          if (deleteButton) deleteTraining(deleteButton.dataset.deleteTraining);
+        });
+      }
+
+      applyTheme(loadTheme());
+      setFormMode();
+      syncFields();
+      bindEvents();
+      renderAll();
+    })();
+  </script>
+</body>
+</html>
